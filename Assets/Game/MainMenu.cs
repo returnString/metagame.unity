@@ -63,7 +63,7 @@ public class MainMenu : MonoBehaviour
 					{
 						m_loginErrorText = null;
 						StartCoroutine(Login());
-          }
+					}
 				}
 				break;
 
@@ -104,7 +104,7 @@ public class MainMenu : MonoBehaviour
 		{
 			m_state = MenuState.LoginRequired;
 		}
-  }
+	}
 
 	IEnumerator Login()
 	{
@@ -128,7 +128,7 @@ public class MainMenu : MonoBehaviour
 		yield return StartCoroutine(Collection.Init(m_metagame));
 		m_state = MenuState.Playing;
 		StartPlaying();
-  }
+	}
 
 	void StartPlaying()
 	{
@@ -138,7 +138,7 @@ public class MainMenu : MonoBehaviour
 	void StopPlaying()
 	{
 		Destroy(m_player);
-  }
+	}
 
 	IEnumerator Logout()
 	{
@@ -146,5 +146,5 @@ public class MainMenu : MonoBehaviour
 		var metaRef = new MetagameRef<AuthResponse>();
 		yield return StartCoroutine(m_metagame.Logout(metaRef));
 		m_state = MenuState.LoginRequired;
-  }
+	}
 }

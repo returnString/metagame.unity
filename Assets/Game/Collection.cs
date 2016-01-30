@@ -16,14 +16,14 @@ public class Collection<TInstance, TAdvertisedData>
 	{
 		m_metagame = metagame;
 		m_name = name;
-  }
+	}
 
 	public IEnumerator DownloadData()
 	{
 		var metaRef = new MetagameRef<AdvertisedResponse<TAdvertisedData>>();
 		yield return m_metagame.StartCoroutine(m_metagame.GetAdvertisedData(metaRef, m_name));
 		Data = metaRef.Data.Advertised;
-  }
+	}
 }
 
 public static class Collection
@@ -39,7 +39,7 @@ public static class Collection
 		foreach (var prop in props)
 		{
 			var instance = Activator.CreateInstance(prop.PropertyType, metagame, prop.Name.ToLower());
-      var enumerator = (IEnumerator)prop.PropertyType.InvokeMember("DownloadData", InvokeFlags, null, instance, new object[0]);
+			var enumerator = (IEnumerator)prop.PropertyType.InvokeMember("DownloadData", InvokeFlags, null, instance, new object[0]);
 			yield return metagame.StartCoroutine(enumerator);
 			prop.SetValue(null, instance, null);
 		}

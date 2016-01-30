@@ -11,7 +11,7 @@ namespace SampleGame.Users
 	public class AdvertisedUserData
 	{
 		public Dictionary<string, PurchaseableItem> Items { get; set; }
-  }
+	}
 
 	public class User : MetagameInstance
 	{
