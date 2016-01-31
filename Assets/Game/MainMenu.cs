@@ -1,12 +1,10 @@
 ﻿using Metagame;
 using Metagame.Auth;
 using Metagame.Matchmaking;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
-using UnityEngine.Networking;
 
 public enum MenuState
 {
@@ -17,6 +15,7 @@ public enum MenuState
 	DownloadingData,
 	MatchmakingScreen,
 	MatchmakingInProgress,
+	SessionConnectionInProgress,
 	Playing,
 }
 
@@ -26,6 +25,7 @@ public class MainMenu : MonoBehaviour
 	public GameObject PlayerPrefab;
 
 	private MetagameClient m_metagame;
+	private GameNetworkManager m_netManager;
 	private MenuState m_state;
 
 	private string m_userNameText = string.Empty;
@@ -36,10 +36,13 @@ public class MainMenu : MonoBehaviour
 	private string m_partyID;
 	private string m_joinedSessionID;
 	private bool m_hosting;
+	private List<string> m_badTickets;
 
 	void Start()
 	{
-		m_metagame = FindObjectOfType<MetagameClient>();
+		m_badTickets = new List<string>();
+		m_metagame = GetComponent<MetagameClient>();
+		m_netManager = GetComponent<GameNetworkManager>();
 		StartCoroutine(Connect());
 	}
 
@@ -103,6 +106,12 @@ public class MainMenu : MonoBehaviour
 				}
 				break;
 
+			case MenuState.SessionConnectionInProgress:
+				{
+					GUILayout.Label("Connecting to session...");
+				}
+				break;
+
 			case MenuState.Playing:
 				{
 					if (GUILayout.Button("Log out"))
@@ -159,7 +168,7 @@ public class MainMenu : MonoBehaviour
 	{
 		m_state = MenuState.MatchmakingInProgress;
 		var metaRef = new MetagameRef<MatchmakingSearchResponse>();
-		yield return StartCoroutine(m_metagame.Matchmake(metaRef, "easyPool", m_partyID, new string[0], new Dictionary<string, string>()));
+		yield return StartCoroutine(m_metagame.Matchmake(metaRef, "easyPool", m_partyID, new string[0], m_badTickets.ToArray(), new Dictionary<string, string>()));
 
 		if (metaRef.Error != null)
 		{
@@ -172,19 +181,32 @@ public class MainMenu : MonoBehaviour
 			if (metaRef.Data.Action == MatchmakingSearchAction.Join)
 			{
 				var ip = metaRef.Data.HostPartyID.Split('|')[0].Replace(',', '.');
-				NetworkManager.singleton.networkAddress = ip;
-				NetworkManager.singleton.StartClient();
+				m_netManager.networkAddress = ip;
+				m_netManager.StartClient();
 				m_hosting = false;
 			}
 			else
 			{
 				m_hosting = true;
-				NetworkManager.singleton.StartHost();
-      }
+				m_netManager.StartHost();
+			}
 
-			StartPlaying();
+			m_state = MenuState.SessionConnectionInProgress;
+			m_netManager.ClientConnected += OnClientConnect;
+			m_netManager.ClientDisconnected += OnClientDisconnect;
 		}
 	}
+
+	private void OnClientConnect()
+	{
+		StartPlaying();
+  }
+
+	private void OnClientDisconnect()
+	{
+		m_badTickets.Add(m_joinedSessionID);
+		StopPlaying();
+  }
 
 	void StartPlaying()
 	{
@@ -193,13 +215,26 @@ public class MainMenu : MonoBehaviour
 
 	void StopPlaying()
 	{
+		m_netManager.ClientConnected -= OnClientConnect;
+		m_netManager.ClientDisconnected -= OnClientDisconnect;
+
 		if (m_hosting)
 		{
-			NetworkManager.singleton.StopHost();
+			m_netManager.StopHost();
 		}
 		else
 		{
-			NetworkManager.singleton.StopClient();
+			m_netManager.StopClient();
+		}
+
+		// we've already recorded the bad session ID so we can restart matchmaking automatically if we failed to connect to a session at all
+		if (m_state == MenuState.SessionConnectionInProgress)
+		{
+			StartCoroutine(Matchmake());
+		}
+		else
+		{
+			m_state = MenuState.MatchmakingScreen;
 		}
 	}
 
