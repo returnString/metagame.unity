@@ -38,6 +38,7 @@ public class MainMenu : MonoBehaviour
 	private string m_joinedSessionID;
 	private bool m_hosting;
 	private List<string> m_badTickets;
+	private Coroutine m_pingLoop;
 
 	void Start()
 	{
@@ -198,11 +199,24 @@ public class MainMenu : MonoBehaviour
 			m_state = MenuState.SessionConnectionInProgress;
 			m_netManager.ClientConnected += OnClientConnect;
 			m_netManager.ClientDisconnected += OnClientDisconnect;
+			m_pingLoop = StartCoroutine(PingLoop(metaRef.Data.TTL));
+		}
+	}
+
+	IEnumerator PingLoop(int ttl)
+	{
+		var metaRef = new MetagameRef<MatchmakingPingResponse>();
+		while (true)
+		{
+			yield return StartCoroutine(m_metagame.PingMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_joinedSessionID));
+			yield return new WaitForSeconds(ttl / 2);
 		}
 	}
 
 	void LeaveSession()
 	{
+		StopCoroutine(m_pingLoop);
+		m_pingLoop = null;
 		var metaRef = new MetagameRef<MatchmakingLeaveResponse>();
 		StartCoroutine(m_metagame.LeaveMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_joinedSessionID));
 	}

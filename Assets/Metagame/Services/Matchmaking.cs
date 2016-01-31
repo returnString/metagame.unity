@@ -13,6 +13,7 @@ namespace Metagame.Matchmaking
 		public MatchmakingSearchAction Action { get; set; }
 		public string SessionID { get; set; }
 		public string HostPartyID { get; set; }
+		public int TTL { get; set; }
 	}
 
 	public class MatchmakingPingResponse
