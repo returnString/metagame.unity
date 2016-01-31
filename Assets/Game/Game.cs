@@ -45,14 +45,7 @@ public class Game : MonoBehaviour
 
 	private string GetDefaultUsername()
 	{
-		if (Application.isEditor)
-		{
-			return Environment.UserName + "/editor";
-		}
-		else
-		{
-			return Environment.UserName;
-		}
+		return Environment.UserName + "/" + Process.GetCurrentProcess().Id;
 	}
 
 	void Start()
