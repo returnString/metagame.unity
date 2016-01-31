@@ -1,6 +1,7 @@
 ﻿using Metagame;
 using Metagame.Auth;
 using Metagame.Matchmaking;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,7 +30,7 @@ public class MainMenu : MonoBehaviour
 	private GameNetworkManager m_netManager;
 	private MenuState m_state;
 
-	private string m_userNameText = string.Empty;
+	private string m_userNameText;
 
 	private string m_loginErrorText;
 	private string m_connectErrorText;
@@ -40,8 +41,21 @@ public class MainMenu : MonoBehaviour
 	private List<string> m_badTickets;
 	private Coroutine m_pingLoop;
 
+	private string GetDefaultUsername()
+	{
+		if (Application.isEditor)
+		{
+			return Environment.UserName + "/editor";
+		}
+		else
+		{
+			return Environment.UserName;
+		}
+	}
+
 	void Start()
 	{
+		m_userNameText = GetDefaultUsername();
 		m_badTickets = new List<string>();
 		m_metagame = GetComponent<MetagameClient>();
 		m_netManager = GetComponent<GameNetworkManager>();
