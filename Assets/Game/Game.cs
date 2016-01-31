@@ -144,11 +144,11 @@ public class Game : MonoBehaviour
 	IEnumerator Connect()
 	{
 		m_state = MenuState.Connecting;
-		var metaRef = new MetagameRef<ConnectResponse>();
-		yield return StartCoroutine(m_metagame.Connect(metaRef, MetagameUrl));
-		if (metaRef.Error != null)
+		var task = new MetagameTask<ConnectResponse>();
+		yield return StartCoroutine(m_metagame.Connect(task, MetagameUrl));
+		if (task.Error != null)
 		{
-			m_connectErrorText = metaRef.Error.Name;
+			m_connectErrorText = task.Error.Name;
 			m_state = MenuState.ConnectScreen;
 		}
 		else
@@ -160,18 +160,18 @@ public class Game : MonoBehaviour
 	IEnumerator Login()
 	{
 		m_state = MenuState.LoginInProgress;
-		var metaRef = new MetagameRef<AuthResponse>();
-		yield return StartCoroutine(m_metagame.AuthenticateDebug(metaRef, m_userNameText));
-		if (metaRef.Error != null)
+		var task = new MetagameTask<AuthResponse>();
+		yield return StartCoroutine(m_metagame.AuthenticateDebug(task, m_userNameText));
+		if (task.Error != null)
 		{
-			m_loginErrorText = metaRef.Error.Name;
+			m_loginErrorText = task.Error.Name;
 			m_state = MenuState.LoginScreen;
 		}
 		else
 		{
 			// hack to generate party IDs for debug platforms
-			m_partyID = metaRef.Data.IP.Replace('.', ',') + "|" + Process.GetCurrentProcess().Id;
-			UserID = metaRef.Data.ID;
+			m_partyID = task.Data.IP.Replace('.', ',') + "|" + Process.GetCurrentProcess().Id;
+			UserID = task.Data.ID;
 			yield return StartCoroutine(DownloadData());
 		}
 	}
@@ -181,8 +181,8 @@ public class Game : MonoBehaviour
 		m_state = MenuState.DownloadingData;
 		yield return StartCoroutine(Collection.Init(m_metagame));
 
-		var metaRef = new MetagameRef<InstanceResponse<User>>();
-		yield return Collection.Users.DownloadInstance(metaRef, UserID);
+		var task = new MetagameTask<InstanceResponse<User>>();
+		yield return Collection.Users.DownloadInstance(task, UserID);
 
 		m_state = MenuState.MatchmakingScreen;
 	}
@@ -190,20 +190,20 @@ public class Game : MonoBehaviour
 	IEnumerator Matchmake()
 	{
 		m_state = MenuState.MatchmakingInProgress;
-		var metaRef = new MetagameRef<MatchmakingSearchResponse>();
-		yield return StartCoroutine(m_metagame.Matchmake(metaRef, MatchmakingPool, m_partyID, new string[0], m_badTickets.ToArray(), new Dictionary<string, string>()));
+		var task = new MetagameTask<MatchmakingSearchResponse>();
+		yield return StartCoroutine(m_metagame.Matchmake(task, MatchmakingPool, m_partyID, new string[0], m_badTickets.ToArray(), new Dictionary<string, string>()));
 
-		if (metaRef.Error != null)
+		if (task.Error != null)
 		{
 			m_state = MenuState.MatchmakingScreen;
 		}
 		else
 		{
-			m_currentSessionID = metaRef.Data.SessionID;
-			m_hosting = metaRef.Data.Action == MatchmakingSearchAction.Create;
+			m_currentSessionID = task.Data.SessionID;
+			m_hosting = task.Data.Action == MatchmakingSearchAction.Create;
 			if (!m_hosting)
 			{
-				var ip = metaRef.Data.HostPartyID.Split('|')[0].Replace(',', '.');
+				var ip = task.Data.HostPartyID.Split('|')[0].Replace(',', '.');
 				m_netManager.networkAddress = ip;
 				m_netManager.StartClient();
 			}
@@ -215,16 +215,16 @@ public class Game : MonoBehaviour
 			m_state = MenuState.SessionConnectionInProgress;
 			m_netManager.ClientConnected += OnClientConnect;
 			m_netManager.ClientDisconnected += OnClientDisconnect;
-			m_pingLoop = StartCoroutine(PingLoop(metaRef.Data.TTL));
+			m_pingLoop = StartCoroutine(PingLoop(task.Data.TTL));
 		}
 	}
 
 	IEnumerator PingLoop(int ttl)
 	{
-		var metaRef = new MetagameRef<MatchmakingPingResponse>();
+		var task = new MetagameTask<MatchmakingPingResponse>();
 		while (true)
 		{
-			yield return StartCoroutine(m_metagame.PingMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_currentSessionID));
+			yield return StartCoroutine(m_metagame.PingMatchmakingSession(task, MatchmakingPool, m_partyID, m_currentSessionID));
 			yield return new WaitForSeconds(ttl / 2);
 		}
 	}
@@ -233,8 +233,8 @@ public class Game : MonoBehaviour
 	{
 		StopCoroutine(m_pingLoop);
 		m_pingLoop = null;
-		var metaRef = new MetagameRef<MatchmakingLeaveResponse>();
-		StartCoroutine(m_metagame.LeaveMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_currentSessionID));
+		var task = new MetagameTask<MatchmakingLeaveResponse>();
+		StartCoroutine(m_metagame.LeaveMatchmakingSession(task, MatchmakingPool, m_partyID, m_currentSessionID));
 	}
 
 	private void OnClientConnect()
@@ -284,8 +284,8 @@ public class Game : MonoBehaviour
 
 	IEnumerator Logout()
 	{
-		var metaRef = new MetagameRef<AuthResponse>();
-		yield return StartCoroutine(m_metagame.Logout(metaRef));
+		var task = new MetagameTask<AuthResponse>();
+		yield return StartCoroutine(m_metagame.Logout(task));
 		m_state = MenuState.LoginScreen;
 	}
 }

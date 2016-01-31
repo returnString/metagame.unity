@@ -37,7 +37,7 @@ namespace Metagame
 			m_responseLock = new ReaderWriterLockSlim();
 		}
 
-		public IEnumerator Connect(IMetagameTask<ConnectResponse> task, string url)
+		public IEnumerator Connect(MetagameTask<ConnectResponse> task, string url)
 		{
 			task.Reset();
 
@@ -102,13 +102,13 @@ namespace Metagame
 			}
 		}
 
-		public IEnumerator Send<TData, TRequestData>(IMetagameTask<TData> task, string path, TRequestData @params)
+		public IEnumerator Send<TData, TRequestData>(MetagameTask<TData> task, string path, TRequestData @params)
 		{
 			task.Reset();
 
 			if (!m_socket.IsAlive)
 			{
-				var connectTask = new MetagameRef<ConnectResponse>();
+				var connectTask = new MetagameTask<ConnectResponse>();
 				for (var i = 0; i < ReconnectAttempts; i++)
 				{
 					yield return StartCoroutine(Connect(connectTask, m_socket.Url.ToString()));

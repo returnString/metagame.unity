@@ -22,14 +22,14 @@ public class MoneyBag : Interactive
 		}
 
 		m_applying = true;
-		var metaRef = new MetagameRef<InstanceResponse<User>>();
+		var task = new MetagameTask<InstanceResponse<User>>();
 		var changeRequest = new ChangeRequest("grantCurrencyInsecure", new { currency = Value });
-		yield return StartCoroutine(Collection.Users.ApplyChange(metaRef, player.User.ID, changeRequest));
+		yield return StartCoroutine(Collection.Users.ApplyChange(task, player.User.ID, changeRequest));
 		m_applying = false;
 
-		if (metaRef.Error == null)
+		if (task.Error == null)
 		{
-			player.LoadProfile(metaRef.Data.Instance);
+			player.LoadProfile(task.Data.Instance);
 			gameObject.SetActive(false);
 		}
 	}

@@ -1,7 +1,24 @@
 ﻿
 namespace Metagame
 {
-	public class MetagameRef<TData> : IMetagameTask<TData>
+	public class MetagameError
+	{
+		public string Name { get; set; }
+	}
+
+	public class MetagameResponse<TData>
+	{
+		public TData Data { get; set; }
+		public MetagameError Error { get; set; }
+	}
+
+	public enum MetagameClientError
+	{
+		NotConnected,
+		SendFailed,
+	}
+
+	public class MetagameTask<TData>
 	{
 		public TData Data { get { return m_response.Data; } }
 		public MetagameError Error { get { return m_response.Error; } }

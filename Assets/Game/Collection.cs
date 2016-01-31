@@ -25,12 +25,12 @@ public class Collection<TInstance, TAdvertisedData>
 
 	public IEnumerator DownloadData()
 	{
-		var metaRef = new MetagameRef<AdvertisedResponse<TAdvertisedData>>();
-		yield return m_metagame.StartCoroutine(m_metagame.GetAdvertisedData(metaRef, m_name));
-		Data = metaRef.Data.Advertised;
+		var task = new MetagameTask<AdvertisedResponse<TAdvertisedData>>();
+		yield return m_metagame.StartCoroutine(m_metagame.GetAdvertisedData(task, m_name));
+		Data = task.Data.Advertised;
 	}
 
-	private void CacheTask(MetagameRef<InstanceResponse<TInstance>> task, string id)
+	private void CacheTask(MetagameTask<InstanceResponse<TInstance>> task, string id)
 	{
 		if (task.Error == null)
 		{
@@ -38,13 +38,13 @@ public class Collection<TInstance, TAdvertisedData>
 		}
 	}
 
-	public IEnumerator ApplyChange(MetagameRef<InstanceResponse<TInstance>> task, string id, params ChangeRequest[] changes)
+	public IEnumerator ApplyChange(MetagameTask<InstanceResponse<TInstance>> task, string id, params ChangeRequest[] changes)
 	{
 		yield return m_metagame.StartCoroutine(m_metagame.ModifyInstance(task, m_name, id, changes));
 		CacheTask(task, id);
 	}
 
-	public IEnumerator DownloadInstance(MetagameRef<InstanceResponse<TInstance>> task, string id)
+	public IEnumerator DownloadInstance(MetagameTask<InstanceResponse<TInstance>> task, string id)
 	{
 		yield return m_metagame.StartCoroutine(m_metagame.GetInstance(task, m_name, id));
 		CacheTask(task, id);

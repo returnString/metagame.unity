@@ -36,20 +36,20 @@ namespace Metagame.State
 
 	public static class MetagameStateExtensions
 	{
-		public static IEnumerator GetAdvertisedData<T>(this MetagameClient metagame, IMetagameTask<AdvertisedResponse<T>> task, string collection)
+		public static IEnumerator GetAdvertisedData<T>(this MetagameClient metagame, MetagameTask<AdvertisedResponse<T>> task, string collection)
 		{
 			var request = new { collection };
 			return metagame.Send(task, "/state/advertised", request);
 		}
 
-		public static IEnumerator GetInstance<T>(this MetagameClient metagame, IMetagameTask<InstanceResponse<T>> task, string collection, string id)
+		public static IEnumerator GetInstance<T>(this MetagameClient metagame, MetagameTask<InstanceResponse<T>> task, string collection, string id)
 			where T : MetagameInstance
 		{
 			var request = new { collection, id };
 			return metagame.Send(task, "/state/instance", request);
 		}
 
-		public static IEnumerator ModifyInstance<T>(this MetagameClient metagame, IMetagameTask<InstanceResponse<T>> task, string collection, string id, params ChangeRequest[] changes)
+		public static IEnumerator ModifyInstance<T>(this MetagameClient metagame, MetagameTask<InstanceResponse<T>> task, string collection, string id, params ChangeRequest[] changes)
 			where T : MetagameInstance
 		{
 			var request = new { collection, id, changes };
