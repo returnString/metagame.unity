@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
+using SampleGame.Users;
 
 public class Player : NetworkBehaviour
 {
@@ -10,8 +11,13 @@ public class Player : NetworkBehaviour
 	private Camera m_camera;
 	private CharacterController m_char;
 
+	public User User { get; private set; }
+
 	[SyncVar]
 	private string m_name;
+
+	[SyncVar]
+	private int m_currency;
 
 	void Awake()
 	{
@@ -27,7 +33,20 @@ public class Player : NetworkBehaviour
 
 	public override void OnStartLocalPlayer()
 	{
-		CmdSetName(Game.UserID);
+		LoadProfile(Collection.Users.GetInstance(Game.UserID, id => new User()));
+	}
+
+	public void LoadProfile(User user)
+	{
+		User = user;
+		CmdSetCurrency(User.Currency);
+		CmdSetName(User.ID);
+	}
+
+	[Command]
+	void CmdSetCurrency(int currency)
+	{
+		m_currency = currency;
 	}
 
 	[Command]
@@ -39,7 +58,10 @@ public class Player : NetworkBehaviour
 	void OnGUI()
 	{
 		var point = Camera.main.WorldToScreenPoint(transform.position + (Vector3.up * (m_char.height / 2)));
-		GUI.Label(new Rect(point.x, Screen.height - point.y, 200, 200), m_name);
+		var rect = new Rect(point.x, Screen.height - point.y - 20, 200, 200);
+		GUI.Label(rect, m_name);
+		rect.y += 20;
+		GUI.Label(rect, "Currency: " + m_currency);
 	}
 
 	void Update()

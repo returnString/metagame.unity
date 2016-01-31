@@ -1,6 +1,8 @@
 ﻿using Metagame;
 using Metagame.Auth;
 using Metagame.Matchmaking;
+using Metagame.State;
+using SampleGame.Users;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -178,6 +180,10 @@ public class Game : MonoBehaviour
 	{
 		m_state = MenuState.DownloadingData;
 		yield return StartCoroutine(Collection.Init(m_metagame));
+
+		var metaRef = new MetagameRef<InstanceResponse<User>>();
+		yield return Collection.Users.DownloadInstance(metaRef, UserID);
+
 		m_state = MenuState.MatchmakingScreen;
 	}
 

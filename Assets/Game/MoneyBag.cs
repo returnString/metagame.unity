@@ -11,10 +11,10 @@ public class MoneyBag : Interactive
 
 	public override void OnLocalPlayerInteract(Player player)
 	{
-		StartCoroutine(AddMoney());
+		StartCoroutine(AddMoney(player));
 	}
 
-	IEnumerator AddMoney()
+	IEnumerator AddMoney(Player player)
 	{
 		if (m_applying)
 		{
@@ -24,11 +24,12 @@ public class MoneyBag : Interactive
 		m_applying = true;
 		var metaRef = new MetagameRef<InstanceResponse<User>>();
 		var changeRequest = new ChangeRequest("grantCurrencyInsecure", new { currency = Value });
-		yield return StartCoroutine(Collection.Users.ApplyChange(metaRef, Game.UserID, changeRequest));
+		yield return StartCoroutine(Collection.Users.ApplyChange(metaRef, player.User.ID, changeRequest));
 		m_applying = false;
 
 		if (metaRef.Error == null)
 		{
+			player.LoadProfile(metaRef.Data.Instance);
 			gameObject.SetActive(false);
 		}
 	}

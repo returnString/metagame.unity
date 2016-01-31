@@ -3,6 +3,7 @@ using Metagame.State;
 using SampleGame.Users;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 public class Collection<TInstance, TAdvertisedData>
@@ -13,10 +14,13 @@ public class Collection<TInstance, TAdvertisedData>
 	private MetagameClient m_metagame;
 	private string m_name;
 
+	private Dictionary<string, TInstance> m_cachedInstances;
+
 	public Collection(MetagameClient metagame, string name)
 	{
 		m_metagame = metagame;
 		m_name = name;
+		m_cachedInstances = new Dictionary<string, TInstance>();
 	}
 
 	public IEnumerator DownloadData()
@@ -26,9 +30,36 @@ public class Collection<TInstance, TAdvertisedData>
 		Data = metaRef.Data.Advertised;
 	}
 
-	public IEnumerator ApplyChange(IMetagameTask<InstanceResponse<TInstance>> task, string id, params ChangeRequest[] changes)
+	private void CacheTask(MetagameRef<InstanceResponse<TInstance>> task, string id)
+	{
+		if (task.Error == null)
+		{
+			m_cachedInstances[id] = task.Data.Instance;
+		}
+	}
+
+	public IEnumerator ApplyChange(MetagameRef<InstanceResponse<TInstance>> task, string id, params ChangeRequest[] changes)
 	{
 		yield return m_metagame.StartCoroutine(m_metagame.ModifyInstance(task, m_name, id, changes));
+		CacheTask(task, id);
+	}
+
+	public IEnumerator DownloadInstance(MetagameRef<InstanceResponse<TInstance>> task, string id)
+	{
+		yield return m_metagame.StartCoroutine(m_metagame.GetInstance(task, m_name, id));
+		CacheTask(task, id);
+	}
+
+	public TInstance GetInstance(string id, Func<string, TInstance> defaultInstanceCreator = null)
+	{
+		TInstance ret;
+		if (!m_cachedInstances.TryGetValue(id, out ret) && defaultInstanceCreator != null)
+		{
+			ret = defaultInstanceCreator(id);
+			ret.ID = id;
+		}
+
+		return ret;
 	}
 }
 
