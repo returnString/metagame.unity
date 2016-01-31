@@ -38,7 +38,7 @@ public class Game : MonoBehaviour
 	private string m_connectErrorText;
 
 	private string m_partyID;
-	private string m_joinedSessionID;
+	private string m_currentSessionID;
 	private bool m_hosting;
 	private List<string> m_badTickets;
 	private Coroutine m_pingLoop;
@@ -131,13 +131,13 @@ public class Game : MonoBehaviour
 
 			case MenuState.SessionConnectionInProgress:
 				{
-					GUILayout.Label("Connecting to session...");
+					GUILayout.Label("Connecting to session: " + m_currentSessionID);
 				}
 				break;
 
 			case MenuState.Playing:
 				{
-					if (GUILayout.Button("Leave session"))
+					if (GUILayout.Button("Leave session: " + m_currentSessionID))
 					{
 						StopPlaying();
 					}
@@ -200,7 +200,7 @@ public class Game : MonoBehaviour
 		}
 		else
 		{
-			m_joinedSessionID = metaRef.Data.SessionID;
+			m_currentSessionID = metaRef.Data.SessionID;
 			m_hosting = metaRef.Data.Action == MatchmakingSearchAction.Create;
 			if (!m_hosting)
 			{
@@ -225,7 +225,7 @@ public class Game : MonoBehaviour
 		var metaRef = new MetagameRef<MatchmakingPingResponse>();
 		while (true)
 		{
-			yield return StartCoroutine(m_metagame.PingMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_joinedSessionID));
+			yield return StartCoroutine(m_metagame.PingMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_currentSessionID));
 			yield return new WaitForSeconds(ttl / 2);
 		}
 	}
@@ -235,7 +235,7 @@ public class Game : MonoBehaviour
 		StopCoroutine(m_pingLoop);
 		m_pingLoop = null;
 		var metaRef = new MetagameRef<MatchmakingLeaveResponse>();
-		StartCoroutine(m_metagame.LeaveMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_joinedSessionID));
+		StartCoroutine(m_metagame.LeaveMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_currentSessionID));
 	}
 
 	private void OnClientConnect()
@@ -245,7 +245,7 @@ public class Game : MonoBehaviour
 
 	private void OnClientDisconnect()
 	{
-		m_badTickets.Add(m_joinedSessionID);
+		m_badTickets.Add(m_currentSessionID);
 		StopPlaying();
 	}
 
