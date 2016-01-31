@@ -20,11 +20,13 @@ public enum MenuState
 	Playing,
 }
 
-public class MainMenu : MonoBehaviour
+public class Game : MonoBehaviour
 {
 	public string MatchmakingPool = "easyPool";
 	public string MetagameUrl = "ws://localhost:1337";
 	public Camera MainCamera;
+
+	public static string UserID { get; private set; }
 
 	private MetagameClient m_metagame;
 	private GameNetworkManager m_netManager;
@@ -164,7 +166,7 @@ public class MainMenu : MonoBehaviour
 	{
 		m_state = MenuState.LoginInProgress;
 		var metaRef = new MetagameRef<AuthResponse>();
-		yield return StartCoroutine(m_metagame.Authenticate(metaRef, m_userNameText));
+		yield return StartCoroutine(m_metagame.AuthenticateDebug(metaRef, m_userNameText));
 		if (metaRef.Error != null)
 		{
 			m_loginErrorText = metaRef.Error.Name;
@@ -174,6 +176,7 @@ public class MainMenu : MonoBehaviour
 		{
 			// hack to generate party IDs for debug platforms
 			m_partyID = metaRef.Data.IP.Replace('.', ',') + "|" + Process.GetCurrentProcess().Id;
+			UserID = metaRef.Data.ID;
 			yield return StartCoroutine(DownloadData());
 		}
 	}

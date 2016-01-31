@@ -5,13 +5,14 @@ namespace Metagame.Auth
 	public class AuthResponse
 	{
 		public string IP { get; set; }
+		public string ID { get; set; }
 	}
 
 	public static class MetagameAuthExtensions
 	{
-		public static IEnumerator Authenticate(this MetagameClient metagame, IMetagameTask<AuthResponse> task, object key, string client = "game")
+		public static IEnumerator AuthenticateDebug(this MetagameClient metagame, IMetagameTask<AuthResponse> task, string userID, string client = "game")
 		{
-			var request = new { client, key };
+			var request = new { client, userID };
 			return metagame.Send(task, "/auth/login", request);
 		}
 
