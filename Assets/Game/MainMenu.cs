@@ -22,7 +22,7 @@ public enum MenuState
 public class MainMenu : MonoBehaviour
 {
 	public string MetagameUrl = "ws://localhost:1337";
-	public GameObject PlayerPrefab;
+	public Camera MainCamera;
 
 	private MetagameClient m_metagame;
 	private GameNetworkManager m_netManager;
@@ -177,17 +177,15 @@ public class MainMenu : MonoBehaviour
 		else
 		{
 			m_joinedSessionID = metaRef.Data.SessionID;
-
-			if (metaRef.Data.Action == MatchmakingSearchAction.Join)
+			m_hosting = metaRef.Data.Action == MatchmakingSearchAction.Create;
+			if (!m_hosting)
 			{
 				var ip = metaRef.Data.HostPartyID.Split('|')[0].Replace(',', '.');
 				m_netManager.networkAddress = ip;
 				m_netManager.StartClient();
-				m_hosting = false;
 			}
 			else
 			{
-				m_hosting = true;
 				m_netManager.StartHost();
 			}
 
@@ -200,21 +198,23 @@ public class MainMenu : MonoBehaviour
 	private void OnClientConnect()
 	{
 		StartPlaying();
-  }
+	}
 
 	private void OnClientDisconnect()
 	{
 		m_badTickets.Add(m_joinedSessionID);
 		StopPlaying();
-  }
+	}
 
 	void StartPlaying()
 	{
+		MainCamera.gameObject.SetActive(false);
 		m_state = MenuState.Playing;
 	}
 
 	void StopPlaying()
 	{
+		MainCamera.gameObject.SetActive(true);
 		m_netManager.ClientConnected -= OnClientConnect;
 		m_netManager.ClientDisconnected -= OnClientDisconnect;
 
