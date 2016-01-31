@@ -16,8 +16,22 @@ namespace Metagame.State
 
 	public class MetagameInstance
 	{
-		[JsonProperty(PropertyName = "_id")]
+		[JsonProperty("_id")]
 		public string ID { get; set; }
+	}
+
+	public class ChangeRequest
+	{
+		[JsonProperty("name")]
+		public string Name;
+		[JsonProperty("params")]
+		public object Params;
+
+		public ChangeRequest(string name, object changeParams)
+		{
+			Name = name;
+			Params = changeParams;
+		}
 	}
 
 	public static class MetagameStateExtensions
@@ -33,6 +47,13 @@ namespace Metagame.State
 		{
 			var request = new { collection, id };
 			return metagame.Send(task, "/state/instance", request);
+		}
+
+		public static IEnumerator ModifyInstance<T>(this MetagameClient metagame, IMetagameTask<InstanceResponse<T>> task, string collection, string id, params ChangeRequest[] changes)
+			where T : MetagameInstance
+		{
+			var request = new { collection, id, changes };
+			return metagame.Send(task, "/state/modify", request);
 		}
 	}
 }

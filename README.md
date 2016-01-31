@@ -6,3 +6,4 @@ The client comprises the basic MetagameClient MonoBehaviour and associated types
 # Demo features
 - Authentication - just using the debug platform for now
 - Matchmaking example flow
+- Applying persistent player changes (currency)

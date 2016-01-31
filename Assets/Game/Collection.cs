@@ -6,6 +6,7 @@ using System.Collections;
 using System.Reflection;
 
 public class Collection<TInstance, TAdvertisedData>
+	where TInstance : MetagameInstance
 {
 	public TAdvertisedData Data { get; private set; }
 
@@ -23,6 +24,11 @@ public class Collection<TInstance, TAdvertisedData>
 		var metaRef = new MetagameRef<AdvertisedResponse<TAdvertisedData>>();
 		yield return m_metagame.StartCoroutine(m_metagame.GetAdvertisedData(metaRef, m_name));
 		Data = metaRef.Data.Advertised;
+	}
+
+	public IEnumerator ApplyChange(IMetagameTask<InstanceResponse<TInstance>> task, string id, params ChangeRequest[] changes)
+	{
+		yield return m_metagame.StartCoroutine(m_metagame.ModifyInstance(task, m_name, id, changes));
 	}
 }
 
