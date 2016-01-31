@@ -21,6 +21,7 @@ public enum MenuState
 
 public class MainMenu : MonoBehaviour
 {
+	public string MatchmakingPool = "easyPool";
 	public string MetagameUrl = "ws://localhost:1337";
 	public Camera MainCamera;
 
@@ -97,6 +98,11 @@ public class MainMenu : MonoBehaviour
 					{
 						StartCoroutine(Matchmake());
 					}
+
+					if (GUILayout.Button("Log out"))
+					{
+						StartCoroutine(Logout());
+					}
 				}
 				break;
 
@@ -114,9 +120,9 @@ public class MainMenu : MonoBehaviour
 
 			case MenuState.Playing:
 				{
-					if (GUILayout.Button("Log out"))
+					if (GUILayout.Button("Leave session"))
 					{
-						StartCoroutine(Logout());
+						StopPlaying();
 					}
 				}
 				break;
@@ -168,7 +174,7 @@ public class MainMenu : MonoBehaviour
 	{
 		m_state = MenuState.MatchmakingInProgress;
 		var metaRef = new MetagameRef<MatchmakingSearchResponse>();
-		yield return StartCoroutine(m_metagame.Matchmake(metaRef, "easyPool", m_partyID, new string[0], m_badTickets.ToArray(), new Dictionary<string, string>()));
+		yield return StartCoroutine(m_metagame.Matchmake(metaRef, MatchmakingPool, m_partyID, new string[0], m_badTickets.ToArray(), new Dictionary<string, string>()));
 
 		if (metaRef.Error != null)
 		{
@@ -195,6 +201,12 @@ public class MainMenu : MonoBehaviour
 		}
 	}
 
+	void LeaveSession()
+	{
+		var metaRef = new MetagameRef<MatchmakingLeaveResponse>();
+		StartCoroutine(m_metagame.LeaveMatchmakingSession(metaRef, MatchmakingPool, m_partyID, m_joinedSessionID));
+	}
+
 	private void OnClientConnect()
 	{
 		StartPlaying();
@@ -214,6 +226,8 @@ public class MainMenu : MonoBehaviour
 
 	void StopPlaying()
 	{
+		LeaveSession();
+
 		MainCamera.gameObject.SetActive(true);
 		m_netManager.ClientConnected -= OnClientConnect;
 		m_netManager.ClientDisconnected -= OnClientDisconnect;
@@ -240,7 +254,6 @@ public class MainMenu : MonoBehaviour
 
 	IEnumerator Logout()
 	{
-		StopPlaying();
 		var metaRef = new MetagameRef<AuthResponse>();
 		yield return StartCoroutine(m_metagame.Logout(metaRef));
 		m_state = MenuState.LoginScreen;

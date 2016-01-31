@@ -19,6 +19,10 @@ namespace Metagame.Matchmaking
 	{
 	}
 
+	public class MatchmakingLeaveResponse
+	{
+	}
+
 	public static class MetagameMatchmakingExtensions
 	{
 		public static IEnumerator Matchmake<TSessionValues>(this MetagameClient metagame, IMetagameTask<MatchmakingSearchResponse> task,
@@ -33,6 +37,13 @@ namespace Metagame.Matchmaking
 		{
 			var request = new { pool, partyID, sessionID };
 			return metagame.Send(task, "/matchmaking/ping", request);
+		}
+
+		public static IEnumerator LeaveMatchmakingSession(this MetagameClient metagame, IMetagameTask<MatchmakingLeaveResponse> task,
+			string pool, string partyID, string sessionID)
+		{
+			var request = new { pool, partyID, sessionID };
+			return metagame.Send(task, "/matchmaking/leave", request);
 		}
 	}
 }
