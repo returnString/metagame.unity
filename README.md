@@ -7,3 +7,5 @@ The client comprises the basic MetagameClient MonoBehaviour and associated types
 - Authentication - just using the debug platform for now
 - Matchmaking example flow
 - Applying persistent player changes (currency)
+
+**NB**: This repo *isn't* a good example of best practices for secure online game dev, it's just a quick example of consuming the metagame API with an easy-to-test P2P model. In the real world, your clients wouldn't be able to request the 'grantCurrency' change themselves; a dedicated server would apply it on their behalf.
