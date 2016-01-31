@@ -4,6 +4,7 @@ namespace Metagame.Auth
 {
 	public class AuthResponse
 	{
+		public string IP { get; set; }
 	}
 
 	public static class MetagameAuthExtensions
