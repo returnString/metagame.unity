@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using UnityEngine;
 
 public enum MenuState
@@ -45,9 +46,35 @@ public class Game : MonoBehaviour
 	private List<string> m_badTickets;
 	private Coroutine m_pingLoop;
 
+	// hold onto this so it doesn't get GC'ed and released
+#pragma warning disable 0414
+	private Mutex m_nameMutex;
+#pragma warning restore 0414
+
 	private string GetDefaultUsername()
 	{
-		return Environment.UserName + "/" + Process.GetCurrentProcess().Id;
+		var count = 0;
+		while (true)
+		{
+			var name = string.Format("{0}_{1}_{2}", Application.companyName, Application.productName, count);
+
+			bool created;
+			m_nameMutex = new Mutex(true, name, out created);
+			if (created)
+			{
+				break;
+			}
+
+			count++;
+		}
+
+		var username = Environment.UserName;
+		if (count > 0)
+		{
+			username = string.Format("{0} ({1})", username, count);
+		}
+
+		return username;	
 	}
 
 	void Start()
