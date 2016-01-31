@@ -9,7 +9,6 @@ public class Player : MonoBehaviour
 	private NetworkIdentity m_ident;
 	private Camera m_camera;
 	private CharacterController m_char;
-	private Vector3 m_lastMousePos;
 
 	void Awake()
 	{
