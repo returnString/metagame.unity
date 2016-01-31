@@ -15,6 +15,8 @@ namespace Metagame
 
 	public class MetagameClient : MonoBehaviour
 	{
+		public int ReconnectAttempts = 3;
+
 		private WebSocket m_socket;
 		private bool m_connected;
 		private string m_connectError;
@@ -106,8 +108,21 @@ namespace Metagame
 
 			if (!m_socket.IsAlive)
 			{
-				task.OnClientError(MetagameClientError.NotConnected);
-				yield break;
+				var connectTask = new MetagameRef<ConnectResponse>();
+				for (var i = 0; i < ReconnectAttempts; i++)
+				{
+					yield return StartCoroutine(Connect(connectTask, m_socket.Url.ToString()));
+					if (connectTask.Error == null)
+					{
+						break;
+					}
+				}
+
+				if (connectTask.Error != null)
+				{
+					task.OnClientError(MetagameClientError.NotConnected);
+					yield break;
+				}
 			}
 
 			var correlation = Guid.NewGuid().ToString("N");
