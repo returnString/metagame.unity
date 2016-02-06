@@ -18,7 +18,7 @@ namespace Metagame
 		public int ReconnectAttempts = 3;
 
 		private WebSocket m_socket;
-		private bool m_connected;
+		private long m_connected;
 		private string m_connectError;
 
 		private Dictionary<string, string> m_responses;
@@ -62,14 +62,14 @@ namespace Metagame
 
 			m_socket = new WebSocket(url);
 			m_connectError = null;
-			m_connected = false;
+			m_connected = 0;
 
 			// TODO: include game-embedded CAs
 			m_socket.ServerCertificateValidationCallback = (s, cert, chain, errors) => false;
 
 			m_socket.OnOpen += (s, e) =>
 			{
-				m_connected = true;
+				Interlocked.Increment(ref m_connected);
 				Log("Metagame connection established");
 			};
 
@@ -94,7 +94,7 @@ namespace Metagame
 			Log("Connecting to {0}", url);
 			m_socket.ConnectAsync();
 
-			while (!m_connected && m_connectError == null)
+			while (Interlocked.Read(ref m_connected) == 0 && m_connectError == null)
 			{
 				yield return null;
 			}
