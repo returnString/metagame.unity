@@ -24,6 +24,13 @@ namespace Metagame
 		private Dictionary<string, string> m_responses;
 		private ReaderWriterLockSlim m_responseLock;
 
+		private enum WriteState : long
+		{
+			InProgress,
+			Done,
+			Failed,
+		}
+
 		private void Log(string format, params object[] args)
 		{
 			var message = string.Format(format, args);
@@ -138,22 +145,18 @@ namespace Metagame
 
 			Log("Sending {0}, {1} chars: {2}", correlation, json.Length, json);
 
-			var done = false;
-			var writeSucceeded = false;
-
+			var status = (long)WriteState.InProgress;
 			m_socket.SendAsync(json, ok =>
 			{
-				done = true;
-				writeSucceeded = ok;
+				Interlocked.Add(ref status, (long)(ok ? WriteState.Done : WriteState.Failed));
 			});
 
-			// FIXME: is this read allowed to be cached in release? find nice sync primitive to replace
-			while (!done)
+			while (Interlocked.Read(ref status) == (long)WriteState.InProgress)
 			{
 				yield return null;
 			}
 
-			if (!writeSucceeded)
+			if (Interlocked.Read(ref status) == (long)WriteState.Failed)
 			{
 				task.OnClientError(MetagameClientError.SendFailed);
 				yield break;
