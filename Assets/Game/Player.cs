@@ -5,11 +5,15 @@ using SampleGame.Users;
 public class Player : NetworkBehaviour
 {
 	public float Speed = 6;
-	public float RotateSpeed = 100;
+	public float RotationSpeed = 10;
 	public float MaxInteractDistance = 10;
 
-	private Camera m_camera;
+	public GameObject PlayerView;
+
 	private CharacterController m_char;
+	private PlayerView m_view;
+
+	private float m_maxInteractDistanceSq;
 
 	public User User { get; private set; }
 
@@ -21,14 +25,17 @@ public class Player : NetworkBehaviour
 
 	void Awake()
 	{
-		m_camera = GetComponentInChildren<Camera>();
-		m_camera.tag = "MainCamera";
+		m_maxInteractDistanceSq = Mathf.Pow(MaxInteractDistance, 2);
 		m_char = GetComponent<CharacterController>();
 	}
 
 	void Start()
 	{
-		m_camera.gameObject.SetActive(isLocalPlayer);
+		if (isLocalPlayer)
+		{
+			m_view = Instantiate(PlayerView).GetComponent<PlayerView>();
+			m_view.Init(this);
+		}
 	}
 
 	public override void OnStartLocalPlayer()
@@ -57,6 +64,11 @@ public class Player : NetworkBehaviour
 
 	void OnGUI()
 	{
+		if (Camera.main == null)
+		{
+			return;
+		}
+
 		var point = Camera.main.WorldToScreenPoint(transform.position + (Vector3.up * (m_char.height / 2)));
 		var rect = new Rect(point.x, Screen.height - point.y - 20, 200, 200);
 		GUI.Label(rect, m_name);
@@ -71,21 +83,30 @@ public class Player : NetworkBehaviour
 			return;
 		}
 
-		var vert = Input.GetAxis("Vertical");
-		var horiz = Input.GetAxis("Horizontal");
-		var dir = transform.TransformDirection(new Vector3(0, 0, vert));
+		var vert = Input.GetAxisRaw("Vertical");
+		var horiz = Input.GetAxisRaw("Horizontal");
+
+		var baseDir = new Vector3(horiz, 0, vert);
+		var dir = baseDir.normalized;
 		m_char.SimpleMove(dir * Speed);
-		transform.Rotate(0, horiz * RotateSpeed * Time.deltaTime, 0);
+
+		if (baseDir.sqrMagnitude > 0.3)
+		{
+			transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * RotationSpeed);
+		}
 
 		if (Input.GetMouseButtonDown(0))
 		{
 			RaycastHit hit;
-			if (Physics.Raycast(m_camera.ScreenPointToRay(Input.mousePosition), out hit, MaxInteractDistance))
+			if (Physics.Raycast(m_view.Camera.ScreenPointToRay(Input.mousePosition), out hit))
 			{
-				var interactive = hit.collider.gameObject.GetComponent<Interactive>();
-				if (interactive != null)
+				if (Vector3.SqrMagnitude(hit.point - transform.position) < m_maxInteractDistanceSq)
 				{
-					interactive.OnLocalPlayerInteract(this);
+					var interactive = hit.collider.gameObject.GetComponent<Interactive>();
+					if (interactive != null)
+					{
+						interactive.OnLocalPlayerInteract(this);
+					}
 				}
 			}
 		}
