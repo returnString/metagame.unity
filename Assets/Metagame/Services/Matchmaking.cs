@@ -30,21 +30,21 @@ namespace Metagame.Matchmaking
 			string pool, string partyID, string[] members, string[] excludedSessions, TSessionValues sessionValues)
 		{
 			var request = new { pool, partyID, members, sessionValues, excludedSessions };
-			return metagame.Send(task, "/matchmaking/search", request);
+			return metagame.MetagameSend(task, "/matchmaking/search", request);
 		}
 
 		public static IEnumerator PingMatchmakingSession(this MetagameClient metagame, MetagameTask<MatchmakingPingResponse> task,
 			string pool, string partyID, string sessionID)
 		{
 			var request = new { pool, partyID, sessionID };
-			return metagame.Send(task, "/matchmaking/ping", request);
+			return metagame.MetagameSend(task, "/matchmaking/ping", request);
 		}
 
 		public static IEnumerator LeaveMatchmakingSession(this MetagameClient metagame, MetagameTask<MatchmakingLeaveResponse> task,
 			string pool, string partyID, string sessionID)
 		{
 			var request = new { pool, partyID, sessionID };
-			return metagame.Send(task, "/matchmaking/leave", request);
+			return metagame.MetagameSend(task, "/matchmaking/leave", request);
 		}
 	}
 }

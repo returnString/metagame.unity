@@ -109,7 +109,7 @@ namespace Metagame
 			}
 		}
 
-		public IEnumerator Send<TData, TRequestData>(MetagameTask<TData> task, string path, TRequestData @params)
+		public IEnumerator MetagameSend<TData, TRequestData>(MetagameTask<TData> task, string path, TRequestData @params)
 		{
 			task.Reset();
 

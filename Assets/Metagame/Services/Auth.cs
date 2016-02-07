@@ -13,12 +13,12 @@ namespace Metagame.Auth
 		public static IEnumerator AuthenticateDebug(this MetagameClient metagame, MetagameTask<AuthResponse> task, string userID, string client = "game")
 		{
 			var request = new { client, userID };
-			return metagame.Send(task, "/auth/login", request);
+			return metagame.MetagameSend(task, "/auth/login", request);
 		}
 
 		public static IEnumerator Logout(this MetagameClient metagame, MetagameTask<AuthResponse> task)
 		{
-			return metagame.Send(task, "/auth/logout", false);
+			return metagame.MetagameSend(task, "/auth/logout", false);
 		}
 	}
 }
